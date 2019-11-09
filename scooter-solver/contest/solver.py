@@ -5,12 +5,27 @@ from scipy.stats import entropy
 from contest.strategies import NeutralScooterCompany, AggressiveScooterCompany
 
 class ProposalCleaner:
+    """ Utilities for cleaning generated proposals.
+    """
+
     def __init__(self):
         pass
     
     def add_null_proposals(self, proposals):
-        """ Adds the null 0 units proposal to each participant.
+        """ Adds the null 0 units proposal to each company.
+
+        Parameters
+        -----------
+        proposals: DataFrame
+            With each company's proposal
+        
+        Returns
+        -------
+        list:
+            Each company now has a proposal with 0 units as
+            last priority.
         """
+
         new_proposals = []
             
         for p in proposals:
@@ -27,7 +42,21 @@ class ProposalCleaner:
     
     def create_scenarios(self, proposals):
         """ Create combinations of companies.
+
+        Cartesian product of every proposal, across
+        all companies, creating a long dataframe in which 
+        every combination is uniquely identified.
+
+        Parameters
+        -----------
+        proposals: DataFrame
+            List of proposals.
+
+        Returns
+        -------
+        DataFrame
         """
+    
         participants = [p.company.values[0] for p in proposals]
         priority_prod = (
             pd.DataFrame(
@@ -42,6 +71,17 @@ class ProposalCleaner:
         return priority_prod.merge(props, how='left', on=['company', 'priority'])
 
 def kl_to_uniform(p):
+    """ KL Divergence to the discrete uniform distribution.
+
+    Parameters
+    ----------
+    p: ndarray
+        Probability distribution. If not normalized, it will be.
+
+    Returns
+    -------
+    float
+    """
     n = p.shape[0]
     p = p/p.sum()
     return np.log2(n) - entropy(p)
@@ -51,6 +91,19 @@ class ContestOptimizer:
         pass
     
     def filter_number_units(self, scenarios):
+        """ Make sure no scenario exceeds 3500 scooters.
+
+        Parameters
+        ----------
+        scenarios: DataFrame
+            Output of a ProposalCleaner's create_scenarios.
+
+        Returns
+        -------
+        DataFrame:
+            With admissible scenarios only.
+        """
+
         return (
             scenarios
             .groupby('scenario_id')
@@ -61,6 +114,19 @@ class ContestOptimizer:
         )
     
     def optimize_number_units(self, admissible_scenarios):
+        """ Keeps only scenarios with the hightest total consideration.
+
+        Parameters
+        ----------
+        admissible_scenarios: DataFrame
+            Output of filter_number_units
+
+        Returns
+        -------
+        DataFrame:
+            Optimal w.r.t total consideration.
+        """
+
         return (
             admissible_scenarios
             .assign(total_consideration = lambda df: df.units*df.consideration)
@@ -73,6 +139,21 @@ class ContestOptimizer:
         )
     
     def break_tie_priority(self, optimal_scenarios):
+        """ First tie breaker.
+
+        Keeps the scenarios with the hightest number of
+        proposals marked with number one priority.
+
+        Parameters
+        ----------
+        optimal_scenarios:
+            Output of optimize_number_units
+        
+        Returns
+        -------
+        DataFrame
+        """
+
         if optimal_scenarios.scenario_id.nunique() == 1:
             return optimal_scenarios
         return (
@@ -86,6 +167,22 @@ class ContestOptimizer:
         )
     
     def break_tie_entropy(self, optimal_scenarios):
+        """ Second tie breaker.
+
+        Keeps the scenario closest to the uniform
+        distribution, in the sense of KL divergence.
+        That is, the most entropic distirbution.
+
+        Parameters
+        ----------
+        optimal_scenarios:
+            Output of break_tie_priority
+        
+        Returns
+        -------
+        DataFrame
+        """
+        
         if optimal_scenarios.scenario_id.nunique() == 1:
             return optimal_scenarios
         return (
@@ -100,6 +197,24 @@ class ContestOptimizer:
         )
     
     def optimize(self, S):
+        """ Get contest winners.
+
+        Runs the total consideration optimizer and
+        both tie breakers in the necessary case. See their
+        respective documentation for details.
+
+        
+        Parameters
+        ----------
+        S: list
+            List of all possible scenarios.
+
+        Returns
+        -------
+        DataFrame:
+            With the winning strategies.
+        """
+
         S = self.filter_number_units(S)
         S = self.optimize_number_units(S)
         S = self.break_tie_priority(S)
@@ -108,35 +223,67 @@ class ContestOptimizer:
 
 class Contest:
     def __init__(self, nagg=1, nneu=2, custom=None):
-        self.participants = self.create_participants(nagg, nneu, custom)
+        self.participants = None
+        self.create_participants(nagg, nneu, custom)
         self.cleaner = ProposalCleaner()
         self.proposals = self.recieve_proposals()
+        self.joint_proposals = self.recieve_proposals(joint=True)
         self.optimizer = ContestOptimizer()
         self.optimal = None
-        
-    
+
     def create_participants(self, nagg, nneu, custom):
-        """ According to the numbers given.
+        """ According to the numbers given, and sets 
+        is as a property object.
+
+        Parameters
+        -----------
+        nagg: nonnegative integer
+            Number of aggressive companies.
+        nneu: nonnegative integer
+            Number of neutral companies.
+        custom: CustomScooterCompany
+            A ScooterCompany object to represent the optimizer's strategy.
         """
         neu = [NeutralScooterCompany() for _ in range(nneu)]
         agg = [AggressiveScooterCompany() for _ in range(nagg)]
         parts = neu + agg
         if custom is not None:
             parts += [custom]
-        return parts
-    
-    def recieve_proposals(self):
-        """ Get list of DataFrames with the proposals.
+        self.participants = parts
+        return
+
+    def recieve_proposals(self, joint=False):
+        """ Get list of DataFrames with proposals from 
+        each partipant.
+
+        Parameters
+        -----------
+        joint: bool
+            If True, returns a single DataFrame (the human readable
+            version of the proposals)
+
+        Returns
+        --------
+        List of DataFrames:
+            To be used by the solver
         """
-        return (
-            pd.concat(
-                [p.strategy for p in self.participants]
-            ).reset_index(drop=True)
-        )
+
+        props = [p.strategy for p in self.participants]
+        if not joint:
+            return props
+        return pd.concat(props)
     
     
     
     def get_winners(self):
+        """ Runs the optimizer.
+
+        Returns
+        --------
+        DataFrame:
+            With the contest's results.
+        """
+
         if self.optimal is not None:
             return self.optimal
         clean_proposals = self.cleaner.create_scenarios(self.proposals)
