@@ -95,7 +95,7 @@ class ContestOptimizer:
             .assign(min_kl = lambda df: df.units.min())
             .query('units==min_kl')
             .drop(['units', 'min_kl'], axis=1)
-            .merge(optimal_scenarios, how='onner', on='scenario_id')
+            .merge(optimal_scenarios, how='inner', on='scenario_id')
             
         )
     
@@ -138,4 +138,4 @@ class Contest:
         clean_proposals = self.cleaner.create_scenarios(self.proposals)
         self.optimal = self.optimizer.optimize(clean_proposals)
         return self.optimal
-    
+
