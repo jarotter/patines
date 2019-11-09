@@ -51,7 +51,7 @@ class NeutralScooterCompany(ScooterCompany):
         unit_probs = 21 - unit_opts
         unit_probs = unit_probs/unit_probs.sum()
         units = np.random.choice(unit_opts, size=N, replace=False)
-        consideration = 1 + gamma.rvs(a=3, scale=3/4, size=N)
+        consideration = 1 + gamma.rvs(a=4, scale=3/4, size=N)
         return pd.DataFrame({
             'company':self.name,
             'units': units,
@@ -72,7 +72,7 @@ class AggressiveScooterCompany(ScooterCompany):
         N_probs = N_probs/N_probs.sum()
         N = np.random.choice(N_opts, p=N_probs)
         units = [35-i for i in range(N)]
-        consideration = 1 + gamma.rvs(a=6, scale=1, size=N)
+        consideration = 1 + gamma.rvs(a=10, scale=3/4, size=N)
         return pd.DataFrame({
             'company':self.name,
             'units': units,
