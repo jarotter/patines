@@ -45,12 +45,11 @@ class NeutralScooterCompany(ScooterCompany):
     def bid(self):
         """
         """
-        N_opts = np.arange(1, 21)
-        N_probs = 21 - N_opts
-        N_probs = N_probs/N_probs.sum()
-        N = np.random.choice(N_opts, p=N_probs)
-        units = [35-i for i in range(N)]
-        units = np.random.choice(N_opts, size=N, replace=False)
+        N = np.random.randint(low=1, high=21)  
+        unit_opts = np.arange(1, 35)
+        unit_probs = 21 - unit_opts
+        unit_probs = unit_probs/unit_probs.sum()
+        units = np.random.choice(unit_opts, size=N, replace=False)
         consideration = 1 + gamma.rvs(a=3, scale=3/4, size=N)
         return pd.DataFrame({
             'company':self.name,
