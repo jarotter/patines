@@ -128,7 +128,11 @@ class Contest:
     def recieve_proposals(self):
         """ Get list of DataFrames with the proposals.
         """
-        return pd.concat([p.strategy for p in self.participants])
+        return (
+            pd.concat(
+                [p.strategy for p in self.participants]
+            ).reset_index(drop=True)
+        )
     
     
     
