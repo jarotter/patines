@@ -5,7 +5,8 @@ from scipy.stats import gamma
 word_file = "/usr/share/dict/words"
 with open(word_file, 'r') as f:
     WORDS = pd.Series(f.read().splitlines(), dtype=str)
-WORDS = WORDS[WORDS.str.len()==4].reset_index(drop=True).to_list()
+WORDS = WORDS[WORDS.str.len() == 4].reset_index(drop=True)
+WORDS = WORDS[WORDS.str.lower() == WORDS].to_list()
 
 class ScooterCompany:
     def __init__(self, name=None):
