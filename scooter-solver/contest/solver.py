@@ -58,6 +58,7 @@ class ProposalCleaner:
         """
     
         participants = [p.company.values[0] for p in proposals]
+        proposals = self.add_null_proposals(proposals)
         priority_prod = (
             pd.DataFrame(
                 product(*(p.priority for p in proposals)),
@@ -65,10 +66,9 @@ class ProposalCleaner:
             .reset_index(drop=False)
             .rename(columns={'index':'scenario_id'})
             .melt(id_vars='scenario_id', var_name='company', value_name='priority')
+            .merge(pd.concat(proposals), how='outer', on=['company', 'priority'])
         )
-        
-        props = pd.concat(self.add_null_proposals(proposals), sort=False)
-        return priority_prod.merge(props, how='left', on=['company', 'priority'])
+        return priority_prod
 
 def kl_to_uniform(p):
     """ KL Divergence to the discrete uniform distribution.
@@ -271,7 +271,7 @@ class Contest:
         props = [p.strategy for p in self.participants]
         if not joint:
             return props
-        return pd.concat(props)
+        return pd.concat(props).reset_index(drop=True)
     
     
     
