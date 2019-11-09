@@ -19,25 +19,6 @@ class ScooterCompany:
         w = np.random.randint(0, len(WORDS))
         return WORDS[w]
 
-class UniformScooterCompany(ScooterCompany):
-    def __init__(self, name=None):
-        super().__init__(name)
-        self.strategy = self.bid()
-
-    def bid(self):
-        """
-        """
-        N = np.random.randint(low=1, high=21)  
-        a = np.arange(1, 36)
-        units = np.random.choice(a, size=N, replace=False)
-        consideration = 1 + gamma.rvs(a=3, scale=3/4, size=N)
-        return pd.DataFrame({
-            'company':self.name,
-            'units': units,
-            'consideration': consideration,
-            'priority': np.arange(1, N+1)
-        })
-
 class NeutralScooterCompany(ScooterCompany):
     def __init__(self, name=None):
         super().__init__(name)
@@ -51,7 +32,7 @@ class NeutralScooterCompany(ScooterCompany):
         unit_probs = 21 - unit_opts
         unit_probs = unit_probs/unit_probs.sum()
         units = np.random.choice(unit_opts, size=N, replace=False)
-        consideration = 1 + gamma.rvs(a=4, scale=3/4, size=N)
+        consideration = 1 + gamma.rvs(a=6, scale=3/4, size=N)
         return pd.DataFrame({
             'company':self.name,
             'units': units,
@@ -68,11 +49,11 @@ class AggressiveScooterCompany(ScooterCompany):
         """
         """
         N_opts = np.arange(1, 21)
-        N_probs = np.exp2(21 - N_opts)
+        N_probs = np.power(21 - N_opts, 2)
         N_probs = N_probs/N_probs.sum()
         N = np.random.choice(N_opts, p=N_probs)
         units = [35-i for i in range(N)]
-        consideration = 1 + gamma.rvs(a=10, scale=3/4, size=N)
+        consideration = 1 + gamma.rvs(a=12, scale=3/4, size=N)
         return pd.DataFrame({
             'company':self.name,
             'units': units,
