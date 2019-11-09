@@ -72,7 +72,7 @@ class AggressiveScooterCompany(ScooterCompany):
         N_probs = N_probs/N_probs.sum()
         N = np.random.choice(N_opts, p=N_probs)
         units = [35-i for i in range(N)]
-        consideration = 1 + gamma.rvs(a=5, scale=13/10, size=N)
+        consideration = 1 + gamma.rvs(a=6, scale=1, size=N)
         return pd.DataFrame({
             'company':self.name,
             'units': units,
