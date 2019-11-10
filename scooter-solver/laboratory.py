@@ -4,16 +4,18 @@ from contest.utility_functions import IndependentUtilityFunction
 
 class ExperimentBuilder():
     def __init__(self, 
-        mc_samples, 
+        N, 
         name, 
+        mc_samples = 100,
         tfunc = "E[u]-indv1",
-        total_trials = 30
+        total_trials = 30,
     ):
-        self.mc_samples = mc_samples
+        self.N = N
         self.name = name
         self.objective_name = tfunc,
         self.minimize = False,
         self.total_trials = total_trials
+        self.mc_samples = mc_samples
         
     def u(self, i):
         return RangeParameter(
@@ -40,17 +42,17 @@ class ExperimentBuilder():
         )
     
     def build_parameters(self):
-        u = [self.u(i) for i in range(self.mc_samples)]
-        c = [self.c(i) for i in range(self.mc_samples)]
+        u = [self.u(i) for i in range(self.N)]
+        c = [self.c(i) for i in range(self.N)]
         D = []
-        for i in range(self.mc_samples):
-            for j in range(i-1):
+        for i in range(self.N):
+            for j in range(i):
                 D.append(self.D(i, j))
                 
         return u + c + D
     
     def neq(self, i, j):
-        M = self.mc_samples + 1
+        M = self.N + 1
         c1 = ParameterConstraint(
             constraint_dict = {
                 f"u{i}": 1.0,
@@ -67,13 +69,13 @@ class ExperimentBuilder():
             },
             bound = -M
         )
-        return c1+c2
+        return [c1, c2]
 
     def build_constraints(self):
         cons = []
-        for i in range(self.mc_samples):
-            for j in range(i-1):
-                cons.append(self.neq(i, j))
+        for i in range(self.N):
+            for j in range(i):
+                cons += self.neq(i, j)
         return cons
 
     def build(self):
@@ -81,6 +83,3 @@ class ExperimentBuilder():
             parameters = self.build_parameters(),
             parameter_constraints= self.build_constraints()
         )
-
-    def f(self, params):
-        return IndependentUtilityFunction(params).sample(size=self.mc_samples)
