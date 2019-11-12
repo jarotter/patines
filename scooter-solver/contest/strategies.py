@@ -19,6 +19,26 @@ class ScooterCompany:
         w = np.random.randint(0, len(WORDS))
         return WORDS[w]
 
+class UniformScooterCompany(ScooterCompany):
+    def __init__(self, name=None):
+        super().__init__(name)
+        self.strategy = self.bid()
+
+    def bid(self, N=None):
+        """
+        """
+        if N is None:
+            N = np.random.randint(low=1, high=21)  
+        unit_opts = np.arange(1, 35)
+        units = np.random.choice(unit_opts, size=N, replace=False)
+        consideration = 1 + gamma.rvs(a=6, scale=3/4, size=N)
+        return pd.DataFrame({
+            'company':self.name,
+            'units': units,
+            'consideration': consideration,
+            'priority': np.arange(1, N+1)
+        })
+
 class NeutralScooterCompany(ScooterCompany):
     def __init__(self, name=None):
         super().__init__(name)
@@ -29,9 +49,9 @@ class NeutralScooterCompany(ScooterCompany):
         """
         N = np.random.randint(low=1, high=21)  
         unit_opts = np.arange(1, 35)
-        unit_probs = 21 - unit_opts
+        unit_probs = 35 - unit_opts
         unit_probs = unit_probs/unit_probs.sum()
-        units = np.random.choice(unit_opts, size=N, replace=False)
+        units = np.random.choice(unit_opts, size=N, replace=False, p=unit_probs)
         consideration = 1 + gamma.rvs(a=6, scale=3/4, size=N)
         return pd.DataFrame({
             'company':self.name,
