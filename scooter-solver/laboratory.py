@@ -19,7 +19,7 @@ class SearchSpaceFactory():
                 name = f"c{i}",
                 parameter_type = ParameterType.FLOAT,
                 lower = 1+1e-6, 
-                upper = np.finfo(float).max
+                upper = 10
         )
     
     def D(self, i, j):
