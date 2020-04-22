@@ -50,3 +50,11 @@ def mypy(session: Session) -> None:
     args = session.posargs or LOCATIONS
     install_with_constraints(session, "mypy")
     session.run("mypy", *args)
+
+
+@nox.session(python=["3.8"])
+def black(session: Session) -> None:
+    """Run black formatter."""
+    args = session.posargs or LOCATIONS
+    install_with_constraints(session, "black")
+    session.run("black", *args)
