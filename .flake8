@@ -1,0 +1,6 @@
+[flake8]
+select = C,E,F,W,BLK,I,ANN
+max-complexity = 10
+ignore = E203,W503
+max-line-length = 88
+application-import-names = bayesian_scooters, tests
