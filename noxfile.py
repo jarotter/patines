@@ -5,6 +5,7 @@ import nox
 from nox.sessions import Session
 
 LOCATIONS = "src", "tests", "noxfile.py"
+nox.options.sessions = "lint", "tests", "mypy"
 
 
 def install_with_constraints(session: Session, *args: str) -> None:
