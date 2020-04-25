@@ -1,7 +1,7 @@
 [flake8]
 select = C,E,F,W,BLK,I,ANN,D
 max-complexity = 10
-ignore = E203,W503
+ignore = E203,W503,D107,ANN101
 max-line-length = 88
 application-import-names = bayesian_scooters, tests
 docstring-convetion = google
