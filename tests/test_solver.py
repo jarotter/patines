@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bayesian_scooters.contest import Contest
-from bayesian_scooters.solver import wasserstein_to_uniform
+from bayesian_scooters.solver import Contest, wasserstein_to_uniform
 from bayesian_scooters.strategies import CustomScooterCompany
 
 NUMBER_AGGRESIVE = 2
