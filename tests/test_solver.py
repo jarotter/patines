@@ -26,7 +26,7 @@ def contest() -> Contest:
     """Build contest to use in tests."""
     params = {"units": [35], "consideration": [1.5]}
     custom = CustomScooterCompany(params)
-    return Contest(nagg=NUMBER_AGGRESIVE, nnneu=NUMBER_NEUTRAL, custom=custom)
+    return Contest(nagg=NUMBER_AGGRESIVE, nneu=NUMBER_NEUTRAL, custom=custom)
 
 
 def test_null_proposals(contest: Fixture) -> None:
