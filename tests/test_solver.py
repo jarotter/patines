@@ -24,7 +24,7 @@ class Fixture(Generic[T]):
 @pytest.fixture
 def contest() -> Contest:
     """Build contest to use in tests."""
-    params = {"units": [35], "consideration": [1.5]}
+    params = {"units": [35, 30], "consideration": [2, 1.5]}
     custom = CustomScooterCompany(params)
     return Contest(nagg=NUMBER_AGGRESIVE, nneu=NUMBER_NEUTRAL, custom=custom)
 
@@ -63,10 +63,10 @@ def test_wasserstein_to_uniform() -> None:
     It should be zero for the uniform distribution
     and positive elsewhere.
     """
-    n = np.random.randint(1, 10)
+    n = np.random.randint(2, 11)
     uniform_n = np.ones(n) / n
     assert np.isclose(wasserstein_to_uniform(uniform_n), 0)
-    some_other_distribution = np.random.randn(size=n)
+    some_other_distribution = np.random.randn(n)
     some_other_distribution /= some_other_distribution.sum()
     assert wasserstein_to_uniform(some_other_distribution) > 0
 
@@ -81,7 +81,8 @@ def test_filter_number_of_units(contest: Fixture) -> None:
         {"scenario_id": [1, 1, 1, 2, 2], "units": [35, 20, 20, 30, 35]}
     )
     clean = contest.optimizer.filter_number_units(scenarios)
-    assert clean.scenario_id.unique().values[0] == 2
+    assert clean.scenario_id.unique().size == 1
+    assert clean.scenario_id.unique()[0] == 2
 
 
 def test_optimize_consideration(contest: Fixture) -> None:
@@ -93,7 +94,8 @@ def test_optimize_consideration(contest: Fixture) -> None:
     scenarios = pd.DataFrame(
         {
             "scenario_id": [1, 1, 1, 2, 2, 3],
-            "total_consideration": [100, 200, 300, 10, 20, 600],
+            "consideration": [100, 100, 100, 10, 10, 100],
+            "units": [1, 2, 3, 1, 2, 6],
         }
     )
     clean = contest.optimizer.optimize_consideration(scenarios).scenario_id.unique()
@@ -127,10 +129,7 @@ def test_break_tie_entropy(contest: Fixture) -> None:
         contest: pytest fixture for building the contest.
     """
     scenarios = pd.DataFrame(
-        {
-            "scenario_id": [1, 1, 1, 2, 2],
-            "units": [1, 1, 1, 1, 7],
-        }
+        {"scenario_id": [1, 1, 1, 2, 2], "units": [1, 1, 1, 1, 7], }
     )
     clean = contest.optimizer.break_tie_entropy(scenarios).scenario_id.unique()
     assert 1 in clean
@@ -145,10 +144,12 @@ def test_optimize(contest: Fixture) -> None:
     """
     scenarios = contest.cleaner.create_scenarios(contest.proposals)
     optimal = contest.optimizer.optimize(scenarios)
-    assert optimal.shape[0] == 0
+    print(optimal)
     assert "company" in optimal.columns
     assert "units" in optimal.columns
     assert "consideration" in optimal.columns
+    assert "priority" in optimal.columns
+    assert optimal.scenario_id.nunique() == 1
 
 
 def test_create_participants(contest: Fixture) -> None:
@@ -188,4 +189,6 @@ def test_winner(contest: Fixture) -> None:
         contest: pytest fixture for building the contest.
     """
     winner = contest.get_winners()
-    assert winner.shape[0] == 0
+    assert winner.scenario_id.nunique() == 1
+    winner2 = contest.get_winners()
+    assert winner.scenario_id.unique()[0] == winner2.scenario_id.unique()[0]
